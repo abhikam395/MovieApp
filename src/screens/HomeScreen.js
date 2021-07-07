@@ -4,38 +4,83 @@ import { DARKBLUE } from '../utils/commoncolors';
 
 import MovieItemComponent from '../components/MovieItemComponent';
 import TrailerItemComponent from '../components/TrailerItemComponent';
+import { connect } from 'react-redux';
+import { 
+    LATEST_TRAILERS_FETCH_REQUEST,
+    POPULAR_MOVIES_FETCH_REQUEST, 
+    TOPRATED_MOVIES_FETCH_REQUEST 
+} from '../store/types';
 
 const image = "https://www.bol.hr/files/Image/news/2018/film.jpg";
 
+const mapDispatchToProps = function(dispatch){
+    return {
+        requestPopularMovies: () => dispatch({type: POPULAR_MOVIES_FETCH_REQUEST}),
+        requestTopRatedMovies: () => dispatch({type: TOPRATED_MOVIES_FETCH_REQUEST}),
+        requestLatestTrailers: () => dispatch({type: LATEST_TRAILERS_FETCH_REQUEST}),
+    }
+}
 
-const list = [
-    {id: 1, name: 'sdfsdf'},
-    {id: 2, name: 'sdfsdf'},
-    {id: 3, name: 'sdfsdf'},
-    {id: 4, name: 'sdfsdf'},
-    {id: 5, name: 'sdfsdf'},
-    {id: 6, name: 'sdfsdf'},
-    {id: 7, name: 'sdfsdf'},
+const mapStateToProps = function(state){
+    return {
+        popularMovies: state.home.popularMovies,
+        topRatedMovies: state.home.topRatedMovies,
+        latestTrailers: state.home.latestTrailers
+    }
+}
 
-]
-
-export default class HomeScreen extends Component{
+class HomeScreen extends Component{
 
     constructor(){
         super();
+        this.state = {
+            currentTrailerId: -1
+        }
+        this.changeCurrentTrailerId = this.changeCurrentTrailerId.bind(this);
         this.renderMovieItem = this.renderMovieItem.bind(this);
         this.renderTrailerItem = this.renderTrailerItem.bind(this);
     }
 
-    renderMovieItem({item}){
-        return <MovieItemComponent {...this.props}/>
+    componentDidMount(){
+        const {
+            requestLatestTrailers, 
+            requestPopularMovies, 
+            requestTopRatedMovies
+        } = this.props;
+
+        requestPopularMovies();
+        requestTopRatedMovies();
+        requestLatestTrailers();
+    }
+    
+    changeCurrentTrailerId(id){
+        this.setState({currentTrailerId: id});
     }
 
-    renderTrailerItem({item}){
-        return <TrailerItemComponent {...this.props}/>
+    renderMovieItem({item}){
+        return (
+            <MovieItemComponent 
+                movie={item} 
+                {...this.props}
+            />
+        )
+    }
+
+    renderTrailerItem({item, index}){
+        let {currentTrailerId} = this.state;
+        return (
+            <TrailerItemComponent
+                {...this.props}
+                movie={item} 
+                id={index}
+                onClick={this.changeCurrentTrailerId}
+                selectedTrailerId = {currentTrailerId}
+            />
+        )
     }
 
     render(){
+        let {popularMovies, topRatedMovies, latestTrailers} = this.props;
         return (
             <FlatList
                 ListEmptyComponent={
@@ -45,7 +90,7 @@ export default class HomeScreen extends Component{
                             <Text style={styles.subtitle}> What's Popular</Text>
                             <FlatList
                                 horizontal
-                                data={list}
+                                data={popularMovies}
                                 keyExtractor={(item) => item.id.toString()}
                                 renderItem={this.renderMovieItem}
                                 showsHorizontalScrollIndicator={false}
@@ -53,10 +98,10 @@ export default class HomeScreen extends Component{
                             />
                         </View>
                         <View style={styles.moviesContainer}>
-                            <Text style={styles.subtitle}>Free To Watch</Text>
+                            <Text style={styles.subtitle}>Top Rated</Text>
                             <FlatList
                                 horizontal
-                                data={list}
+                                data={topRatedMovies}
                                 keyExtractor={(item) => item.id.toString()}
                                 renderItem={this.renderMovieItem}
                                 showsHorizontalScrollIndicator={false}
@@ -68,7 +113,7 @@ export default class HomeScreen extends Component{
                             <Text style={styles.trailerTitle}> Latest Trailers </Text>
                             <FlatList
                                 horizontal
-                                data={list}
+                                data={latestTrailers}
                                 contentContainerStyle={{padding: 10}}
                                 keyExtractor={(item) => item.id.toString()}
                                 renderItem={this.renderTrailerItem}
@@ -83,10 +128,12 @@ export default class HomeScreen extends Component{
     }
 }
 
+export default connect(mapStateToProps, mapDispatchToProps)(HomeScreen);
+
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        paddingBottom: 100
+        paddingBottom: 40
     },
     moviesContainer: {
         flexGrow: 0,

@@ -13,9 +13,10 @@ export default function(){
   return (
     <NavigationContainer>
       <Stack.Navigator
-        initialRouteName="MovieDetail"
+        initialRouteName="Home"
         screenOptions={{
             headerTitle: 'TMDB',
+            headerTintColor: 'white',
             headerTitleStyle: {
               color: APP_TITLE,
               letterSpacing: 3,

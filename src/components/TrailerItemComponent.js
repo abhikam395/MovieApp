@@ -1,44 +1,69 @@
-import React, { Component } from 'react';
+import React, { Component, createRef } from 'react';
 import {View, Text, StyleSheet, Image, TouchableOpacity} from 'react-native';
-import { DARKBLUE } from '../utils/commoncolors';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 
-const image = "https://static.toiimg.com/photo/msid-70892041/70892041.jpg";
+import Video from 'react-native-video';
+const image = "https://www.themoviedb.org/t/p/w355_and_h200_multi_faces/";
 
 export default class TrailerItemComponent extends Component{
 
     constructor(){
         super();
-        this.navigateToMovieDetailScreen = this.navigateToMovieDetailScreen.bind(this);
+        this.state = {
+            videoPlaying: false
+        }
+        this.onVideoButtonToggle = this.onVideoButtonToggle.bind(this);
     }
 
-    navigateToMovieDetailScreen(){
+    navigateToMovieDetailScreen(movie){
         const {navigation} = this.props;
-        navigation.navigate('MovieDetail');
+        navigation.navigate('MovieDetail', {data: movie, type: 'tv'});
     }
+
+    onVideoButtonToggle(){
+        let {videoPlaying} = this.state;
+        let {onClick, id, selectedTrailerId} = this.props;
+        this.setState({videoPlaying: !videoPlaying});
+        onClick(id);
+    }
+
 
     render(){
+        let {movie, selectedTrailerId, id} = this.props;
+        let {name, poster_path} = movie;
+        let {videoPlaying} = this.state;
+        let isPause = videoPlaying == false || selectedTrailerId != id;
         return (
             <TouchableOpacity 
                 style={styles.container}
                 activeOpacity={.7}
-                onPress={this.navigateToMovieDetailScreen}>
+                onPress={() => this.navigateToMovieDetailScreen(movie)}>
                 <View style={styles.imageContainer}>
-                    <Image 
-                        source={{uri: image}} 
-                        style={styles.image}
+                    <Video
+                        source={{uri: 'https://content.jwplatform.com/manifests/yp34SRmf.m3u8'}}
+                        style={styles.videoPlayer}
+                        fullscreen={true}
+                        pictureInPicture={true}
+                        resizeMode="cover"
+                        playWhenInactive={true}
+                        playInBackground={true}
+                        onVideoLoadStart={() => {console.log('loading')}}
+                        poster={`${image + poster_path}`}
+                        posterResizeMode="stretch"
+                        paused={isPause}
                     />
-                    <TouchableOpacity style={styles.playButton}>
+                    <TouchableOpacity 
+                        onPress={this.onVideoButtonToggle}
+                        style={styles.playButton}>
                         <MaterialIcons 
                             size={57} 
-                            name="play-arrow"
+                            name={videoPlaying ? 'pause': 'play-arrow'}
                             color="white"
                         />
                     </TouchableOpacity>
                 </View>
                 <View style={styles.movieInfo}>
-                    <Text style={styles.movieName}>America: The Motion Picture</Text>
-                    <Text style={styles.movieDate}>America The Motion Picture | Opening Day</Text>
+                    <Text style={styles.movieName}>{name}</Text>
                 </View>
             </TouchableOpacity>
         )
@@ -49,7 +74,6 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         borderRadius: 10,
-        // alignItems: 'center'
     },
     imageContainer: {
         height: 200,
@@ -59,8 +83,9 @@ const styles = StyleSheet.create({
     image: {
         height: 200,
         width: 300,
-        borderRadius: 20,
-        // resizeMode: 'stretch'
+        borderRadius: 10,
+        zIndex: 1,
+        resizeMode: 'stretch'
     },
     movieInfo: {
         padding: 10,
@@ -80,5 +105,12 @@ const styles = StyleSheet.create({
     },
     playButton: {
         position: 'absolute',
-    }
+        zIndex: 2
+    },
+    videoPlayer: {
+        height: 200,
+        width: 300,
+        borderRadius: 10,
+        zIndex: 1,
+    },
 })
